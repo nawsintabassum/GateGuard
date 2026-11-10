@@ -23,21 +23,22 @@ import { notFound, errorHandler } from "./middleware/error";
 const app = express();
 
 app.set("trust proxy", 1);
-
 app.disable("x-powered-by");
 
+// Security headers
 app.use(helmet());
 
+// CORS
 app.use(
   cors({
-    origin: env.CLIENT_URL.split(",").map(v => v.trim()),
+    origin: env.CLIENT_URL.split(",").map((v) => v.trim()),
     credentials: true
   })
 );
 
 // ============================================
 // GitHub Webhook Raw Body Middleware
-// Must run before express.json()
+// MUST be before express.json()
 // ============================================
 
 app.use(
@@ -63,6 +64,7 @@ app.use(
 
 app.use(cookieParser());
 
+// Request logging
 if (env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
@@ -140,7 +142,6 @@ app.use(
 // ============================================
 
 app.use(notFound);
-
 app.use(errorHandler);
 
 export default app;
