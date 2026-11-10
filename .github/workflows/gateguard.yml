@@ -1,0 +1,106 @@
+name: GateGuard Quality Gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend typecheck and production build
+        id: frontend_build
+        continue-on-error: true
+        working-directory: frontend
+        run: npm run build
+
+      - name: Frontend dependency audit
+        id: frontend_audit
+        continue-on-error: true
+        working-directory: frontend
+        run: npm audit --json > frontend-audit.json
+
+      - name: Backend typecheck
+        id: typecheck
+        continue-on-error: true
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: ESLint
+        id: lint
+        continue-on-error: true
+        working-directory: backend
+        run: npx eslint src --format json --output-file eslint-report.json
+
+      - name: Tests and coverage
+        id: tests
+        continue-on-error: true
+        working-directory: backend
+        run: npx vitest run --coverage --reporter=json --outputFile=test-results.json
+
+      - name: Backend production build
+        id: backend_build
+        continue-on-error: true
+        working-directory: backend
+        run: npm run build
+
+      - name: Dependency audit
+        id: audit
+        continue-on-error: true
+        working-directory: backend
+        run: npm audit --json > npm-audit.json
+
+      - name: Build GateGuard result payload
+        if: always()
+        working-directory: backend
+        env:
+          FRONTEND_BUILD_OUTCOME: ${{ steps.frontend_build.outcome }}
+          TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.backend_build.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          FRONTEND_AUDIT_OUTCOME: ${{ steps.frontend_audit.outcome }}
+        run: node .github/scripts/build-gateguard-payload.mjs
+
+      - name: Submit results and enforce quality gate
+        if: always()
+        working-directory: backend
+        env:
+          PROJECT_ID: ${{ vars.GATEGUARD_PROJECT_ID }}
+          CI_TOKEN: ${{ secrets.GATEGUARD_CI_TOKEN }}
+          API_URL: ${{ vars.GATEGUARD_API_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PROJECT_ID" ] || [ -z "$CI_TOKEN" ] || [ -z "$API_URL" ]; then
+            echo "Missing GATEGUARD_PROJECT_ID, GATEGUARD_CI_TOKEN, or GATEGUARD_API_URL configuration."
+            exit 1
+          fi
+          curl --fail-with-body -sS -X POST "$API_URL/api/ci/$PROJECT_ID/results" \
+            -H "Content-Type: application/json" \
+            -H "X-GateGuard-Token: $CI_TOKEN" \
+            --data-binary @gateguard-result.json \
+            -o gateguard-response.json
+          cat gateguard-response.json
+          jq -e '.qualityGate.status == "PASS"' gateguard-response.json >/dev/null || {
+            echo "GateGuard quality gate failed. See the submitted analysis for details."
+            exit 1
+          }

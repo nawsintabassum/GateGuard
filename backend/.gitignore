@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+coverage/
+*.log
+eslint-report.json
+test-results.json
+npm-audit.json
+gateguard-result.json
+gateguard-response.json
