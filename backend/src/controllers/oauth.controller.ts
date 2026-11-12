@@ -10,12 +10,11 @@ import { randomToken, sha256 } from "../utils/crypto";
 const clientUrl = () => env.CLIENT_URL.split(",")[0].trim().replace(/\/$/, "");
 const cookieOptions = {
   httpOnly: true,
-  secure: env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  secure: true,
+  sameSite: "none" as const,
   path: "/api",
   maxAge: 10 * 60 * 1000,
 };
-
 function startOAuth(provider: "github" | "google") {
   return async (req: Request, res: Response) => {
     const state = randomToken();
@@ -92,10 +91,24 @@ async function completeOAuthLogin(
 
 function validState(req: Request, res: Response, state: unknown) {
   const expected = req.cookies?.oauth_state;
-  res.clearCookie("oauth_state", { ...cookieOptions, maxAge: undefined });
-  return typeof state === "string" && typeof expected === "string" && state === expected;
-}
 
+  console.log("OAuth state diagnostic:", {
+    cookiePresent: typeof expected === "string",
+    queryStatePresent: typeof state === "string",
+    stateMatches:
+      typeof state === "string" &&
+      typeof expected === "string" &&
+      state === expected,
+  });
+
+  res.clearCookie("oauth_state", { ...cookieOptions, maxAge: undefined });
+
+  return (
+    typeof state === "string" &&
+    typeof expected === "string" &&
+    state === expected
+  );
+}
 export const githubOAuthStart = startOAuth("github");
 export const googleOAuthStart = startOAuth("google");
 
