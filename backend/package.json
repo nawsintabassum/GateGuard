@@ -41,12 +41,19 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^22.18.0",
     "@types/pdfkit": "^0.17.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^9.35.0",
     "globals": "^16.4.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.44.0",
-    "vitest": "^3.2.4"
+    "vite": "^7.3.8",
+    "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.19"
   }
 }

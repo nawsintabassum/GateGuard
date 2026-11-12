@@ -1,0 +1,24 @@
+{
+  "name": "gateguard-summit-competition-ready",
+  "version": "1.0.0",
+  "description": "**GateGuard** is a developer-focused software quality assurance platform. It collects CI evidence from GitHub Actions, evaluates configurable quality thresholds, stores analysis history, and presents quality findings and reports in a web workspace.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nawsintabassum/gitguard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nawsintabassum/gitguard/issues"
+  },
+  "homepage": "https://github.com/nawsintabassum/gitguard#readme"
+}

@@ -25,7 +25,7 @@ const projectInput = z.object({
     .min(1)
     .max(120)
     .regex(
-      /^[^\s~^:?*\x5B\x5C]+$/,
+      /^[^\s~^:?\x5B\x5C]+$/,
       "Branch name contains invalid characters"
     )
     .optional(),
@@ -121,5 +121,29 @@ export async function deleteProject(req: Request, res: Response) {
 
   res.json({
     message: "Project deleted",
+  });
+}
+
+// Regenerate CI token for a project
+export async function regenerateCiToken(req: Request, res: Response) {
+  const project = await Project.findOne({
+    _id: req.params.id,
+    owner: req.user!.id,
+  }).select("+ciTokenHash");
+
+  if (!project) {
+    return res.status(404).json({
+      message: "Project not found",
+    });
+  }
+
+  const ciToken = randomToken();
+
+  project.ciTokenHash = sha256(ciToken);
+  await project.save();
+
+  return res.json({
+    message: "CI token regenerated successfully",
+    ciToken,
   });
 }
