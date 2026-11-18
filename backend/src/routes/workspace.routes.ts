@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { asyncHandler } from "../utils/asyncHandler";
+import { applyPolicyTemplate, getPolicyTemplates, inviteMember, listMembers, listNotifications, markAllNotificationsRead, markNotificationRead, removeMember, updateMember, getSlackSettings, saveSlackSettings, removeSlackSettings, listAuditLogs } from "../controllers/workspace.controller";
+const router = Router();
+router.get("/notifications/slack", asyncHandler(getSlackSettings));
+router.put("/notifications/slack", asyncHandler(saveSlackSettings));
+router.delete("/notifications/slack", asyncHandler(removeSlackSettings));
+router.get("/notifications", asyncHandler(listNotifications));
+router.post("/notifications/read-all", asyncHandler(markAllNotificationsRead));
+router.patch("/notifications/:id/read", asyncHandler(markNotificationRead));
+router.get("/audit", asyncHandler(listAuditLogs));
+router.get("/policy-templates", asyncHandler(getPolicyTemplates));
+router.post("/policy-templates/apply", asyncHandler(applyPolicyTemplate));
+router.get("/projects/:projectId/members", asyncHandler(listMembers));
+router.post("/projects/:projectId/members", asyncHandler(inviteMember));
+router.patch("/projects/:projectId/members/:memberId", asyncHandler(updateMember));
+router.delete("/projects/:projectId/members/:memberId", asyncHandler(removeMember));
+export default router;
